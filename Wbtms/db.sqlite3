@@ -1,0 +1,77 @@
+-- Table to store users
+CREATE TABLE IF NOT EXISTS Users (
+    user_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT NOT NULL UNIQUE,
+    password TEXT NOT NULL,
+    email TEXT NOT NULL UNIQUE,
+    full_name TEXT NOT NULL,
+    user_type TEXT CHECK(user_type IN ('admin', 'tourist', 'agent')) NOT NULL,
+    date_joined DATE DEFAULT (datetime('now','localtime'))
+);
+
+-- Table to store destinations
+CREATE TABLE IF NOT EXISTS Destinations (
+    destination_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    destination_name TEXT NOT NULL,
+    location TEXT NOT NULL,
+    description TEXT,
+    image_url TEXT,
+    rating REAL DEFAULT 0.0
+);
+
+-- Table to store tours/packages
+CREATE TABLE IF NOT EXISTS Tours (
+    tour_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    destination_id INTEGER NOT NULL,
+    tour_name TEXT NOT NULL,
+    description TEXT,
+    price REAL NOT NULL,
+    duration_days INTEGER NOT NULL,
+    available_slots INTEGER NOT NULL,
+    FOREIGN KEY (destination_id) REFERENCES Destinations(destination_id) ON DELETE CASCADE
+);
+
+-- Table to store bookings
+CREATE TABLE IF NOT EXISTS Bookings (
+    booking_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    tour_id INTEGER NOT NULL,
+    booking_date DATE DEFAULT (datetime('now','localtime')),
+    status TEXT CHECK(status IN ('pending', 'confirmed', 'cancelled')) DEFAULT 'pending',
+    payment_status TEXT CHECK(payment_status IN ('pending', 'paid')) DEFAULT 'pending',
+    total_amount REAL NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (tour_id) REFERENCES Tours(tour_id) ON DELETE CASCADE
+);
+
+-- Table to store reviews for destinations
+CREATE TABLE IF NOT EXISTS Reviews (
+    review_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    destination_id INTEGER NOT NULL,
+    rating INTEGER CHECK(rating >= 1 AND rating <= 5) NOT NULL,
+    review_text TEXT,
+    review_date DATE DEFAULT (datetime('now','localtime')),
+    FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (destination_id) REFERENCES Destinations(destination_id) ON DELETE CASCADE
+);
+
+-- Table to store payments
+CREATE TABLE IF NOT EXISTS Payments (
+    payment_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    booking_id INTEGER NOT NULL,
+    payment_date DATE DEFAULT (datetime('now','localtime')),
+    amount REAL NOT NULL,
+    payment_method TEXT CHECK(payment_method IN ('credit_card', 'debit_card', 'paypal', 'bank_transfer')) NOT NULL,
+    payment_status TEXT CHECK(payment_status IN ('pending', 'completed', 'failed')) DEFAULT 'pending',
+    FOREIGN KEY (booking_id) REFERENCES Bookings(booking_id) ON DELETE CASCADE
+);
+
+-- Table to store agents (if applicable)
+CREATE TABLE IF NOT EXISTS Agents (
+    agent_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    agency_name TEXT NOT NULL,
+    contact_info TEXT,
+    FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE
+);
